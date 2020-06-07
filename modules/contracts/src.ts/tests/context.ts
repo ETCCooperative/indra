@@ -106,6 +106,8 @@ export const setupContext = async (givenAppDefinition?: Contract) => {
 
   const hasPassed = (timeout: BigNumberish) => appRegistry.hasPassed(toBN(timeout));
 
+  const blockNumber = async () => await appRegistry.blockNumber();
+
   const verifySignatures = async (
     digest: string = getRandomBytes32(),
     signatures?: string[],
@@ -380,6 +382,7 @@ export const setupContext = async (givenAppDefinition?: Contract) => {
     isProgressable,
     isFinalized,
     isCancellable,
+    blockNumber,
     hasPassed,
     isDisputable,
     verifySignatures,

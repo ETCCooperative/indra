@@ -1,6 +1,6 @@
 import { ChallengeStatus, AppChallenge } from "@connext/types";
 import { toBN } from "@connext/utils";
-import { Wallet, utils } from "ethers";
+import { Wallet, utils, BigNumber } from "ethers";
 
 import { setupContext } from "../context";
 import {
@@ -11,6 +11,7 @@ import {
   mineBlocks,
   restore,
   snapshot,
+  provider
 } from "../utils";
 
 const { keccak256 } = utils;
@@ -25,6 +26,7 @@ describe("ChallengeRegistry", () => {
   let state0: AppWithCounterState;
 
   // helpers
+  let blockNumber: () => Promise<BigNumber>;
   let setState: (versionNumber: number, appState?: string, timeout?: number) => Promise<void>;
   let setAndProgressState: (
     versionNumber: number,
@@ -59,6 +61,7 @@ describe("ChallengeRegistry", () => {
     state1 = context["state1"];
 
     // helpers
+    blockNumber = context["blockNumber"];
     setState = context["setStateAndVerify"];
     progressState = context["progressState"];
     progressStateAndVerify = context["progressStateAndVerify"];
@@ -106,7 +109,7 @@ describe("ChallengeRegistry", () => {
     await setOutcome(encodeState(finalState));
   });
 
-  it("Can successfully dispute using: `setState` + `setState` + `setOutcome`", async () => {
+  it.only("Can successfully dispute using: `setState` + `setState` + `setOutcome`", async () => {
     await setState(1, encodeState(state0));
 
     await setState(10, encodeState(state0));
@@ -116,7 +119,21 @@ describe("ChallengeRegistry", () => {
     await mineBlocks(ONCHAIN_CHALLENGE_TIMEOUT + 15);
 
     await setOutcome(encodeState(state0));
+
+    const bn1 = await provider.getBlockNumber();
+    const bn2 = await blockNumber();
+    console.log(bn1 + " / " + bn2);
+    expect(bn1).to.equal(bn2);
+
   });
+
+  it.only("Reported block numbers match", async () => {
+    const bn1 = await provider.getBlockNumber();
+    const bn2 = await blockNumber();
+    console.log(bn1 + " / " + bn2);
+    expect(bn1).to.equal(bn2);
+  });
+
 
   it("Can successfully dispute using: `setState` + `progressState` + `progressState` + `setOutcome`", async () => {
     await setState(1, encodeState(state0));

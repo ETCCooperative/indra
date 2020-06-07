@@ -45,6 +45,8 @@ contract LibStateChannelApp is LibDispute {
         return timeout <= block.number;
     }
 
+    function blockNumber() public view returns (uint256) { return block.number; }
+
     /// @dev Checks whether it is still possible to send all-party-signed states
     /// @param appChallenge the app challenge to check
     function isDisputable(
