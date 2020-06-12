@@ -31,7 +31,20 @@ export class TransferMessaging extends AbstractMessagingProvider {
   }
 
   async getTransferHistory(pubId: string): Promise<NodeResponses.GetTransferHistory> {
-    throw new Error("Unimplemented");
+    const history = await this.transferService.getLinkedTransferHistory(pubId);
+    return history.map((app) => {
+      return {
+        paymentId: app.meta.paymentId,
+        amount: app.latestState.coinTransfers[0].amount.isZero()
+          ? app.latestState.coinTransfers[1].amount
+          : app.latestState.coinTransfers[0].amount,
+        assetId: app.initiatorDepositAssetId,
+        senderIdentifier: app.meta.sender,
+        receiverIdentifier: app.meta.recipient,
+        createdAt: app.createdAt,
+        meta: app.meta,
+      };
+    });
   }
 
   /**

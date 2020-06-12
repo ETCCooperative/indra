@@ -10,6 +10,7 @@ import {
   GenericConditionalTransferAppName,
   MethodParams,
   getTransferTypeFromAppName,
+  SimpleLinkedTransferAppName,
   SupportedApplicationNames,
 } from "@connext/types";
 import { stringify, getSignerAddressFromPublicIdentifier } from "@connext/utils";
@@ -94,6 +95,14 @@ export class TransferService {
       }
       this.log.info(`TransferAppInstallFlow for appIdentityHash ${appIdentityHash} complete`);
     }
+  }
+
+  async getLinkedTransferHistory(
+    userIdentifier: string,
+  ): Promise<AppInstance<typeof SimpleLinkedTransferAppName>[]> {
+    return this.transferRepository.findLinkedTransferAppsBySenderAddress(
+      getSignerAddressFromPublicIdentifier(userIdentifier),
+    );
   }
 
   async installReceiverAppByPaymentId(

@@ -1,7 +1,12 @@
-import { EntityRepository, Repository } from "typeorm";
-import { GenericConditionalTransferAppName, ConditionalTransferAppNames } from "@connext/types";
+import { EntityRepository, Repository, Brackets } from "typeorm";
+import {
+  GenericConditionalTransferAppName,
+  ConditionalTransferAppNames,
+  SimpleLinkedTransferAppName,
+} from "@connext/types";
 
 import { AppInstance, AppType } from "../appInstance/appInstance.entity";
+import { AppRegistry } from "src/appRegistry/appRegistry.entity";
 
 @EntityRepository(AppInstance)
 export class TransferRepository extends Repository<AppInstance> {
@@ -37,5 +42,27 @@ export class TransferRepository extends Repository<AppInstance> {
         `app_instance."latestState"::JSONB #> '{"coinTransfers",1,"to"}' = '"${receiverSignerAddress}"'`,
       )
       .getOne() as Promise<AppInstance<T>>;
+  }
+
+  async findLinkedTransferAppsBySenderAddress(senderAddress: string): Promise<AppInstance[]> {
+    const res = await this.createQueryBuilder("app_instance")
+      .leftJoinAndSelect(
+        AppRegistry,
+        "app_registry",
+        "app_registry.appDefinitionAddress = app_instance.appDefinition",
+      )
+      .leftJoinAndSelect("app_instance.channel", "channel")
+      .where("app_registry.name = :name", { name: SimpleLinkedTransferAppName })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            `app_instance."latestState"::JSONB #> '{"coinTransfers",0,"to"}' = '"${senderAddress}"'`,
+          ).orWhere(
+            `app_instance."latestState"::JSONB #> '{"coinTransfers",1,"to"}' = '"${senderAddress}"'`,
+          );
+        }),
+      )
+      .getMany();
+    return res;
   }
 }
